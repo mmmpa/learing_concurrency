@@ -1,6 +1,9 @@
 package p27
 
-import "math/big"
+import (
+	"math/big"
+	"github.com/mmmpa/parallel/common"
+)
 
 func compute(rectCount int) float64 {
 	sum := 0.0
@@ -59,28 +62,12 @@ func computeBig(rectCount int) *big.Float {
 	return mul(sum, width)
 }
 
-func splitWorks(total int, workers int) []int {
-	rest := total%workers - 1
-	base := total / workers
-	works := make([]int, workers)
-
-	for i := 0; i < workers; i++ {
-		if rest < i {
-			works[i] = base
-		} else {
-			works[i] = base + 1
-		}
-	}
-
-	return works
-}
-
 func computeC(rectCount, workers int) float64 {
 	sum := 0.0
 	width := 1.0 / float64(rectCount)
 
 	ch := make(chan float64)
-	works := splitWorks(rectCount, workers)
+	works := common.SplitWorks(rectCount, workers)
 	head := 0
 
 	for _, n := range works {
