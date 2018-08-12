@@ -15,26 +15,24 @@ func run() {
 		context.Background(),
 		time.Duration(3)*time.Second,
 	)
-	ch := make(chan interface{})
 
 	threadZeroWantToEnter = false
-	threadZero(ch)
-	threadOne(ch)
+	threadZero(ctx)
+	threadOne(ctx)
 
 
 loop:
 	for {
 		select {
 		case <-ctx.Done():
-			ch <- struct{}{}
-			ch <- struct{}{}
 			fmt.Println("break!")
 			break loop
 		}
 	}
+	time.Sleep(time.Duration(2 * time.Millisecond))
 }
 
-func threadZero(ch chan interface{}) {
+func threadZero(ctx context.Context) {
 	go func() {
 	loop:
 		for {
@@ -54,7 +52,7 @@ func threadZero(ch chan interface{}) {
 			otherStuffZero()
 
 			select {
-			case <-ch:
+			case <-ctx.Done():
 				fmt.Println("break 0")
 				break loop
 			default:
@@ -63,7 +61,7 @@ func threadZero(ch chan interface{}) {
 	}()
 }
 
-func threadOne(ch chan interface{}) {
+func threadOne(ctx context.Context) {
 	go func() {
 	loop:
 		for {
@@ -83,7 +81,7 @@ func threadOne(ch chan interface{}) {
 			otherStuffOne()
 
 			select {
-			case <-ch:
+			case <-ctx.Done():
 				fmt.Println("break 1")
 				break loop
 			default:
