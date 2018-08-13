@@ -68,24 +68,19 @@ func computeC(rectCount, workers int) float64 {
 
 	ch := make(chan float64)
 	works := common.SplitWorks(rectCount, workers)
-	head := 0
 
-	for _, n := range works {
-		tail := head + n
-
-		go func(ch chan float64, head, tail int) {
+	for offset, _ := range works {
+		go func(ch chan float64, offset int) {
 			sum := 0.0
 
-			for i := head; i < tail; i++ {
+			for i := offset; i < rectCount; i += workers {
 				mid := (float64(i) + 0.5) * width
 				height := 4.0 / (1.0 + mid*mid)
 				sum += height
 			}
 
 			ch <- sum
-		}(ch, head, tail)
-
-		head = tail
+		}(ch, offset)
 	}
 
 	for i := 0; i < workers; i++ {
@@ -156,31 +151,25 @@ func computeCCC(rectCount, workers int) float64 {
 	width := 1.0 / float64(rectCount)
 
 	ch := make(chan SumResult)
-	works := common.SplitWorks(rectCount, workers)
-	head := 0
 
-	for i, n := range works {
-		tail := head + n
-
-		go func(ch chan SumResult, i, head, tail int) {
+	for i := 0; i < workers; i++ {
+		go func(ch chan SumResult, offset int) {
 			sum := 0.0
 
-			for i := head; i < tail; i++ {
+			for i := offset; i < rectCount; i += workers {
 				mid := (float64(i) + 0.5) * width
 				height := 4.0 / (1.0 + mid*mid)
 				sum += height
 			}
 
 			ch <- SumResult{
-				Index: i,
+				Index: offset,
 				Sum:   sum,
 			}
-		}(ch, i, head, tail)
-
-		head = tail
+		}(ch, i)
 	}
 
-	results := make([]float64, len(works))
+	results := make([]float64, workers)
 
 	for i := 0; i < workers; i++ {
 		result := <-ch
