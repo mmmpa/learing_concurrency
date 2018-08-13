@@ -20,6 +20,9 @@ type SumResult struct {
 	Index int
 	Sum   []int
 }
+func PrefixScan(array []int, rawWorkers int) []int {
+	return computeC(array, rawWorkers)
+}
 
 func computeC(array []int, rawWorkers int) []int {
 	l := len(array)

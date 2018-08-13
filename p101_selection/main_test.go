@@ -22,6 +22,7 @@ func TestWorks(t *testing.T) {
 		index int
 	}{
 		{[]int{1, 2, 3, 4, 5}, 2},
+		{[]int{9, 9, 9, 9, 9, 9, 9}, 2},
 		{[]int{1, 2, 3, 4, 5, 6, 7, 8, 9}, 2},
 		{[]int{1, 2, 3, 4, 5, 6, 7, 8, 9}, 5},
 		{[]int{1, 2, 3, 4, 5, 6, 7, 8, 9}, 6},
@@ -33,11 +34,13 @@ func TestWorks(t *testing.T) {
 
 	for i, row := range rows {
 		ac := compute(row.array, row.index)
+		//ac2 := compute(row.array, row.index)
+		ac2 := computeC(row.array, row.index, 7)
 		sort.Ints(row.array)
 		ex := row.array[row.index]
 
-		if ac != ex {
-			fmt.Printf("%+v: re: %+v, ex: %+v\n", i, ac, ex)
+		if ac != ex || ac2 != ex {
+			fmt.Printf("%+v: ac: %+v, ac2: %+v, ex: %+v\n", i, ac, ac2, ex)
 			t.Fail()
 		}
 	}
