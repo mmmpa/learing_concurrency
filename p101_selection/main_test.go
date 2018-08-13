@@ -45,3 +45,20 @@ func TestWorks(t *testing.T) {
 		}
 	}
 }
+
+var num = 100000001
+var array = generateArray(num)
+
+func BenchmarkCompute(b *testing.B) {
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		compute(array, 95123)
+	}
+}
+
+func BenchmarkComputeC(b *testing.B) {
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		computeC(array, 95123, 10)
+	}
+}
