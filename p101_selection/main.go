@@ -110,13 +110,13 @@ func computeC(array []int, index int, workers int) int {
 	switch {
 	case k <= counts[LESS]:
 		next := make([]int, counts[LESS])
-		packC(array, marks, next, LESS, workers)
+		pack(array, marks, next, LESS)
 		return compute(next, index)
 	case k <= lessEqualIndex:
 		return median
 	default:
 		next := make([]int, counts[GREATER])
-		packC(array, marks, next, GREATER, workers)
+		pack(array, marks, next, GREATER)
 		return compute(next, index-lessEqualIndex)
 	}
 }
@@ -142,7 +142,9 @@ func packC(array []int, marks []int, container []int, key int, workers int) {
 	}
 
 	scans := p93.PrefixScan(flags, workers)
-	container[0] = scans[0]
+	if scans[0] == 1 {
+		container[0] = array[0]
+	}
 
 	for i := 0; i < workers; i++ {
 		go func(offset int) {
@@ -194,6 +196,13 @@ func countAndMarkC(array []int, m int, counts []int, marks []int, workers int) {
 	}
 }
 
+type MedConf struct {
+	Head   int
+	Tail   int
+	Offset int
+	Cells  int
+}
+
 func findMedians(array []int, defaultWorkers int) []int {
 	l := len(array)
 	ch := make(chan []int)
@@ -209,9 +218,11 @@ func findMedians(array []int, defaultWorkers int) []int {
 	}
 
 	totalCells := 0
+	confs := make([]MedConf, workers)
+
 	for i := 0; i < workers; i++ {
 		head := i * ll
-		tail := head + ll
+		tail := head + ll - 1
 
 		if tail > l-1 {
 			tail = l - 1
@@ -219,33 +230,33 @@ func findMedians(array []int, defaultWorkers int) []int {
 
 		length := tail - head
 		cellsCount := length/Q + 1
+
+		confs[i] = MedConf{
+			Head:   head,
+			Tail:   tail,
+			Cells:  cellsCount,
+			Offset: totalCells,
+		}
+
 		totalCells += cellsCount
-
-		go func(head, tail, cellsCount int) {
-			medians := make([]int, cellsCount)
-
-			for i := 0; i < cellsCount; i++ {
-				cellMedian := head + i*(Q-1) + M
-
-				if cellMedian > tail {
-					medians[i] = array[tail]
-				} else {
-					medians[i] = array[cellMedian]
-				}
-			}
-
-			ch <- medians
-		}(head, tail, cellsCount)
 	}
 
 	medians := make([]int, totalCells)
 
-	j := 0
-	for i := 0; i < workers; i++ {
-		for _, n := range <-ch {
-			medians[j] = n
-			j++
-		}
+	for _, c := range confs {
+		go func(head, tail, offset, cells int) {
+			for i := 0; i < cells; i++ {
+				cellMedian := head + i*(Q-1) + M
+
+				if cellMedian > tail {
+					medians[i+offset] = array[tail]
+				} else {
+					medians[i+offset] = array[cellMedian]
+				}
+			}
+
+			ch <- medians
+		}(c.Head, c.Tail, c.Offset, c.Cells)
 	}
 
 	return medians

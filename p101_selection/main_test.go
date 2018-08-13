@@ -29,7 +29,7 @@ func TestWorks(t *testing.T) {
 		{generateArray(4), 2},
 		{generateArray(100), 15},
 		{generateArray(1000), 123},
-		{generateArray(100000), 95123},
+		{generateArray(100001), 95123},
 	}
 
 	for i, row := range rows {
@@ -46,7 +46,7 @@ func TestWorks(t *testing.T) {
 	}
 }
 
-var num = 100000001
+var num = 100000000
 var array = generateArray(num)
 
 func BenchmarkCompute(b *testing.B) {
