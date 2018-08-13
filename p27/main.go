@@ -105,7 +105,7 @@ func computeCC(rectCount, workers int) float64 {
 	width := 1.0 / float64(rectCount)
 
 	ch := make(chan WorkerResult)
-	works := splitWorks(rectCount, workers)
+	works := common.SplitWorks(rectCount, workers)
 	head := 0
 
 	for _, n := range works {
@@ -141,6 +141,54 @@ func computeCC(rectCount, workers int) float64 {
 
 	for _, height := range heights {
 		sum += height
+	}
+
+	return sum * width
+}
+
+type SumResult struct {
+	Index int
+	Sum   float64
+}
+
+func computeCCC(rectCount, workers int) float64 {
+	sum := 0.0
+	width := 1.0 / float64(rectCount)
+
+	ch := make(chan SumResult)
+	works := common.SplitWorks(rectCount, workers)
+	head := 0
+
+	for i, n := range works {
+		tail := head + n
+
+		go func(ch chan SumResult, i, head, tail int) {
+			sum := 0.0
+
+			for i := head; i < tail; i++ {
+				mid := (float64(i) + 0.5) * width
+				height := 4.0 / (1.0 + mid*mid)
+				sum += height
+			}
+
+			ch <- SumResult{
+				Index: i,
+				Sum:   sum,
+			}
+		}(ch, i, head, tail)
+
+		head = tail
+	}
+
+	results := make([]float64, len(works))
+
+	for i := 0; i < workers; i++ {
+		result := <-ch
+		results[result.Index] = result.Sum
+	}
+
+	for _, n := range results {
+		sum += n
 	}
 
 	return sum * width
