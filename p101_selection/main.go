@@ -110,13 +110,13 @@ func computeC(array []int, index int, workers int) int {
 	switch {
 	case k <= counts[LESS]:
 		next := make([]int, counts[LESS])
-		pack(array, marks, next, LESS)
+		packC(array, marks, next, LESS, workers)
 		return compute(next, index)
 	case k <= lessEqualIndex:
 		return median
 	default:
 		next := make([]int, counts[GREATER])
-		pack(array, marks, next, GREATER)
+		packC(array, marks, next, GREATER, workers)
 		return compute(next, index-lessEqualIndex)
 	}
 }

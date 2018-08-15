@@ -3,93 +3,45 @@ package p27
 import (
 	"testing"
 	"fmt"
+	"math/rand"
 )
 
-var rectCount = 10000000
-var workers = 8
+func generateArray(l int) []int {
+	a := make([]int, l)
 
-func eq(a []int, b []int) bool {
-	for i, an := range a {
-		if an != b[i] {
-			return false
-		}
+	for i, _ := range a {
+		a[i] = rand.Intn(1000000)
 	}
-	return true
+
+	return a
+}
+
+func clone(base []int) []int {
+	a := make([]int, len(base))
+
+	for i, _ := range a {
+		a[i] = base[i]
+	}
+
+	return a
 }
 
 func TestCompute(t *testing.T) {
-	rows := []struct {
-		total   int
-		workers int
-		comp    func(int, int) float64
-	}{
-		{10000, 1, computeC},
-		{10000, 1, computeCC},
-		{10000, 2, computeCC},
-		{10000, 10, computeCC},
+	rows := [][]int{
+		generateArray(6),
+		generateArray(11),
+		generateArray(100),
+		generateArray(7777),
 	}
 
-	for _, row := range rows {
-		ex := compute(row.total)
-		ac := row.comp(row.total, row.workers)
-		if ex != ac {
-			fmt.Printf("%+v, %+v: %+v %+v\n", row.total, row.workers, ex, ac)
+	for i, row := range rows {
+		ex := compute(clone(row))
+		ac1 := computeC(clone(row), 1)
+		ac2 := computeC(clone(row), 7)
+
+		if ex != ac1 || ex != ac2 {
+			fmt.Printf("%d: %+v %+v %+v\n", i, ex, ac1, ac2)
 			t.Fail()
 		}
-	}
-}
-
-func TestComputeC(t *testing.T) {
-	ex := compute(100000)
-	ac := computeCCC(100000, 1)
-
-	if ex != ac {
-		fmt.Printf("%+v %+v\n", ex, ac)
-		t.Fail()
-	}
-
-	for i := 0; i < 100; i++ {
-		exc := computeCCC(100000, 10)
-		acc := computeCCC(100000, 10)
-
-		if exc != acc {
-			fmt.Printf("%+v %+v\n", exc, acc)
-			t.Fail()
-		}
-	}
-}
-
-func BenchmarkCompute(b *testing.B) {
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		compute(rectCount)
-	}
-}
-
-func BenchmarkComputeBig(b *testing.B) {
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		computeBig(rectCount)
-	}
-}
-
-func BenchmarkComputeC(b *testing.B) {
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		computeC(rectCount, workers)
-	}
-}
-
-func BenchmarkComputeCC(b *testing.B) {
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		computeCC(rectCount, workers)
-	}
-}
-
-func BenchmarkComputeCCC(b *testing.B) {
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		computeCCC(rectCount, workers)
 	}
 }
