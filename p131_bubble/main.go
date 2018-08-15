@@ -31,7 +31,6 @@ func computeC(array []int, rowWorkers int) []int {
 	}
 
 	worked := make([]int, workers)
-	var finished interface{}
 
 	for id := 0; id < workers; id++ {
 		pre := id - 1
@@ -46,6 +45,7 @@ func computeC(array []int, rowWorkers int) []int {
 		allEnd := length - 2
 		go func(ch chan interface{}, id, pre, next int) {
 			r := 0
+
 			for {
 				end := allEnd - id - workers*r
 
@@ -53,20 +53,24 @@ func computeC(array []int, rowWorkers int) []int {
 					break
 				}
 
+				headThread := r == 0 && id == 0
+
+				ex := false
 				for j := 0; j <= end; j++ {
-					for !(r == 0 && id == 0) && worked[pre] <= j {
+					for !headThread && worked[pre] <= j {
 						time.Sleep(time.Duration(rand.Intn(1)) * time.Microsecond)
 					}
 					if array[j] > array[j+1] {
 						t := array[j]
 						array[j] = array[j+1]
 						array[j+1] = t
+						ex = true
 					}
 
 					worked[id] = j
 				}
 
-				if end == 0 {
+				if !ex {
 					ch <- struct{}{}
 					break
 				}
@@ -75,10 +79,6 @@ func computeC(array []int, rowWorkers int) []int {
 				//                              // 次のワーカーが追いついていない
 				for worked[pre] > worked[id] || worked[id]-1 > worked[next] {
 					time.Sleep(time.Duration(rand.Intn(1)) * time.Microsecond)
-
-					if finished != nil {
-						break
-					}
 				}
 
 				r++
@@ -86,7 +86,7 @@ func computeC(array []int, rowWorkers int) []int {
 		}(ch, id, pre, next)
 	}
 
-	finished = <-ch
+	<-ch
 
 	return array
 }

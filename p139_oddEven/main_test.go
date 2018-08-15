@@ -5,13 +5,14 @@ import (
 	"fmt"
 	"math/rand"
 	"sort"
+	"time"
 )
 
 func generateArray(l int) []int {
 	a := make([]int, l)
 
 	for i, _ := range a {
-		a[i] = rand.Intn(100000)
+		a[i] = rand.Intn(20)
 	}
 
 	return a
@@ -30,20 +31,26 @@ func clone(base []int) []int {
 func eq(a []int, b []int) bool {
 	for i, an := range a {
 		if an != b[i] {
+			fmt.Println(i, an, b[i])
 			return false
 		}
 	}
 	return true
 }
 func TestCompute(t *testing.T) {
+	rand.Seed(time.Now().Unix())
+
 	rows := [][]int{
+		{9, 15, 18, 18, 0, 3},
 		generateArray(6),
 		generateArray(11),
 		generateArray(16),
 		generateArray(24),
 		generateArray(100),
+		generateArray(500),
 		generateArray(1000),
-		generateArray(3000),
+		generateArray(2000),
+		generateArray(3100),
 		generateArray(100),
 		generateArray(1000),
 		generateArray(100),
@@ -55,10 +62,10 @@ func TestCompute(t *testing.T) {
 		sort.Ints(ex)
 
 		ac1 := compute(clone(row))
-		ac2 := computeC(clone(row), 3)
+		ac2 := computeC(clone(row), 7)
 
 		if !eq(ex, ac1) || !eq(ex, ac2) {
-			fmt.Printf("%d: %+v %+v %+v\n", i, ex, ac1, ac2)
+			fmt.Printf("%d: %+v %+v %+v %+v\n", i, row, ex, ac1, ac2)
 			t.Fail()
 		}
 	}
