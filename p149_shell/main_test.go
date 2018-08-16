@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"math/rand"
 	"sort"
-	"time"
 )
 
 func generateArray(l int) []int {
@@ -38,36 +37,32 @@ func eq(a []int, b []int) bool {
 	return true
 }
 func TestCompute(t *testing.T) {
-	rand.Seed(time.Now().Unix())
+	rand.Seed(1)
 
-	rows := [][]int{
-		{9, 15, 18, 18, 0, 3},
-		generateArray(6),
-		generateArray(11),
-		generateArray(13),
-		generateArray(31),
-		generateArray(100),
-		generateArray(3020),
-		generateArray(3000),
-		generateArray(2000),
-		generateArray(13120),
-		generateArray(100),
-		generateArray(3000),
-		generateArray(100),
-		generateArray(14132),
-	}//
+	for i := 0; i < 100; i++ {
+		rows := [][]int{
+			{9, 15, 18, 18, 0, 3},
+			generateArray(rand.Intn(5000)),
+			generateArray(rand.Intn(5000)),
+			generateArray(rand.Intn(5000)),
+			generateArray(rand.Intn(5000)),
+			generateArray(rand.Intn(5000)),
+			generateArray(rand.Intn(5000)),
+			generateArray(rand.Intn(5000)),
+		}
 
-	for i, row := range rows {
-		ex := clone(row)
-		sort.Ints(ex)
+		for i, row := range rows {
+			ex := clone(row)
+			sort.Ints(ex)
 
-		ac1 := compute(clone(row))
-		ac2 := computeC(clone(row), 7)
+			ac1 := compute(clone(row))
+			ac2 := computeCC(clone(row), 7)
 
-		if !eq(ex, ac1) || !eq(ex, ac2) {
-			fmt.Printf("%d: %+v %+v\n", i, eq(ex, ac1), eq(ex, ac2))
-			fmt.Printf("%d: %+v %+v %+v %+v\n", i, row, ex, ac1, ac2)
-			t.Fail()
+			if !eq(ex, ac1) || !eq(ex, ac2) {
+				fmt.Printf("%d: %+v %+v\n", i, eq(ex, ac1), eq(ex, ac2))
+				fmt.Printf("%d: %+v %+v\n", i, eq(ex, ac1), eq(ex, compute(ac2)))
+				t.Fail()
+			}
 		}
 	}
 }

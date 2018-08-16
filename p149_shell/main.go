@@ -78,6 +78,62 @@ func computeC(array []int, workers int) []int {
 
 			go func(head, tail int) {
 				for k := head; k <= tail; k++ {
+					for i := k; i < length; i += h {
+						v := array[i]
+						j := i
+
+						for j-h >= 0 && array[j-h] > v {
+							array[j] = array[j-h]
+
+							j -= h
+							if j <= h {
+								break
+							}
+						}
+						array[j] = v
+					}
+				}
+
+				ch <- struct{}{}
+			}(head, tail)
+		}
+
+		for i := 0; i < workers; i++ {
+			<-ch
+		}
+
+		h /= 3
+	}
+
+	return insert(array)
+}
+
+func computeCC(array []int, workers int) []int {
+	length := len(array)
+	ch := make(chan interface{})
+
+	h := 1
+	for h < length {
+		h = 3*h + 1
+	}
+	h /= 3
+
+	for h > 1 {
+		works := h / workers
+		if h%workers != 0 {
+			works++
+		}
+
+		for w := 0; w < workers; w++ {
+			head := w * works
+			tail := head + works - 1
+
+			if tail >= h {
+				tail = h - 1
+			}
+
+			go func(head, tail, h int) {
+				for k := head; k <= tail; k++ {
 					for i := k + h; i < length; i += h {
 						v := array[i]
 						j := i
@@ -95,7 +151,7 @@ func computeC(array []int, workers int) []int {
 				}
 
 				ch <- struct{}{}
-			}(head, tail)
+			}(head, tail, h)
 		}
 
 		for i := 0; i < workers; i++ {
