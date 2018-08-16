@@ -92,6 +92,13 @@ func BenchmarkCompute(b *testing.B) {
 func BenchmarkComputeC(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		computeC(clone(array), 24)
+		computeC(clone(array), 12)
+	}
+}
+
+func BenchmarkComputeCC(b *testing.B) {
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		computeC(clone(array), 1)
 	}
 }

@@ -77,8 +77,8 @@ func computeC(array []int, workers int) []int {
 			}
 
 			go func(head, tail int) {
-				for k := head+h; k <= tail; k++ {
-					for i := k; i < length; i += h {
+				for k := head; k <= tail; k++ {
+					for i := k + h; i < length; i += h {
 						v := array[i]
 						j := i
 
