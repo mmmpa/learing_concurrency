@@ -44,35 +44,43 @@ func TestCompute(t *testing.T) {
 		{9, 15, 18, 18, 0, 3},
 		generateArray(6),
 		generateArray(11),
-		generateArray(16),
-		generateArray(24),
+		generateArray(13),
+		generateArray(31),
 		generateArray(100),
-		generateArray(500),
-		generateArray(1000),
+		generateArray(3020),
+		generateArray(3000),
 		generateArray(2000),
-		generateArray(3100),
+		generateArray(13120),
 		generateArray(100),
-		generateArray(1000),
+		generateArray(3000),
 		generateArray(100),
-		generateArray(500),
-	}
+		generateArray(14132),
+	}//
 
 	for i, row := range rows {
 		ex := clone(row)
 		sort.Ints(ex)
 
 		ac1 := compute(clone(row))
-		ac2 := computeCC(clone(row), 7)
+		ac2 := computeC(clone(row), 7)
 
 		if !eq(ex, ac1) || !eq(ex, ac2) {
+			fmt.Printf("%d: %+v %+v\n", i, eq(ex, ac1), eq(ex, ac2))
 			fmt.Printf("%d: %+v %+v %+v %+v\n", i, row, ex, ac1, ac2)
 			t.Fail()
 		}
 	}
 }
 
-var num = 10000
+var num = 100000
 var array = generateArray(num)
+
+func BenchmarkInsert(b *testing.B) {
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		insert(clone(array))
+	}
+}
 
 func BenchmarkCompute(b *testing.B) {
 	b.ResetTimer()
@@ -84,13 +92,6 @@ func BenchmarkCompute(b *testing.B) {
 func BenchmarkComputeC(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		computeC(clone(array), 6)
-	}
-}
-
-func BenchmarkComputeCC(b *testing.B) {
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		computeCC(clone(array), 6)
+		computeC(clone(array), 24)
 	}
 }
