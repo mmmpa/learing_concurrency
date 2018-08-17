@@ -1,9 +1,5 @@
 package p131
 
-import (
-	"context"
-)
-
 func compute(array []int) []int {
 	qSort(array)
 	return array
@@ -101,30 +97,24 @@ func computeC(array []int, workers int) []int {
 func qSortC(array []int, workers int) {
 	length := len(array)
 	queue := make(chan Data, length)
-	done := make(chan interface{})
-	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan interface{}, length)
 
 	for w := 0; w < workers; w++ {
-		go func(ctx context.Context, queue chan Data, id int) {
-			for {
-				select {
-				case <-ctx.Done():
-					return
-				case data := <-queue:
-					head := data.Head
-					tail := data.Tail
+		go func() {
+			for data := range queue {
+				head := data.Head
+				tail := data.Tail
 
-					if head < tail {
-						q := part(array, head, tail)
-						queue <- Data{head, q - 1}
-						queue <- Data{q + 1, tail}
-						done <- struct{}{}
-					} else if head == tail {
-						done <- struct{}{}
-					}
+				if head < tail {
+					q := part(array, head, tail)
+					queue <- Data{head, q - 1}
+					queue <- Data{q + 1, tail}
+					done <- struct{}{}
+				} else if head == tail {
+					done <- struct{}{}
 				}
 			}
-		}(ctx, queue, w)
+		}()
 	}
 
 	queue <- Data{0, length - 1}
@@ -132,5 +122,4 @@ func qSortC(array []int, workers int) {
 	for i := 0; i < length; i++ {
 		<-done
 	}
-	cancel()
 }

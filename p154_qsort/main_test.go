@@ -39,7 +39,7 @@ func eq(a []int, b []int) bool {
 func TestCompute(t *testing.T) {
 	rand.Seed(1)
 
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 1000; i++ {
 		rows := [][]int{
 			generateArray(rand.Intn(1000)),
 			generateArray(rand.Intn(1000)),
@@ -81,7 +81,7 @@ func BenchmarkCompute(b *testing.B) {
 func BenchmarkComputeC(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		computeC(clone(array), 4)
+		computeC(clone(array), 10)
 	}
 }
 
