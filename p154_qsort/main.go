@@ -122,4 +122,6 @@ func qSortC(array []int, workers int) {
 	for i := 0; i < length; i++ {
 		<-done
 	}
+	close(done)
+	close(queue)
 }
