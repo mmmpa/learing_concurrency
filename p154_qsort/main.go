@@ -2,8 +2,8 @@ package p131
 
 import (
 	"sync"
-	"fmt"
 	"time"
+	"math/rand"
 )
 
 func compute(array []int) []int {
@@ -101,7 +101,7 @@ func computeC(array []int, workers int) []int {
 }
 
 func qSortC(array []int, workers int) {
-	mu := new(sync.RWMutex)
+	mu:= new(sync.RWMutex)
 	mu2 := new(sync.RWMutex)
 	queue := []Data{{0, len(array) - 1}}
 	rest := 1
@@ -110,30 +110,42 @@ func qSortC(array []int, workers int) {
 	dequeue := make(chan Data)
 
 	go func() {
-		for {
-			data := <-enqueue
-			mu.Lock()
-			queue = append(queue, data...)
-			mu.Unlock()
-		}
-	}()
 
-	go func() {
 		for {
-			for len(queue) == 0 {
-				time.Sleep(1 * time.Nanosecond)
+			time.Sleep(time.Duration(rand.Intn(10)) * time.Nanosecond)
+		EN:
+			for {
+				select {
+				case data := <-enqueue:
+					queue = append(queue, data...)
+				default:
+					break EN
+					time.Sleep(time.Duration(rand.Intn(10)) * time.Nanosecond)
+				}
 			}
 
-			mu.Lock()
-			l := len(queue)
-			d := queue[0]
-			if l == 1 {
-				queue = []Data{}
-			} else {
-				queue = queue[1:l]
+		DE:
+			for {
+				l := len(queue)
+				if l == 0 {
+					time.Sleep(time.Duration(rand.Intn(10)) * time.Nanosecond)
+					break DE
+				}
+
+				d := queue[0]
+
+				select {
+				case dequeue <- d:
+					if l == 1 {
+						queue = []Data{}
+					} else {
+						queue = queue[1:l]
+					}
+				default:
+					time.Sleep(time.Duration(rand.Intn(10)) * time.Nanosecond)
+					break DE
+				}
 			}
-			mu.Unlock()
-			dequeue <- d
 		}
 	}()
 
@@ -147,7 +159,9 @@ func qSortC(array []int, workers int) {
 
 				r := -1
 				if head < tail {
+					mu.Lock()
 					q := part(array, head, tail)
+					mu.Unlock()
 					enqueue <- []Data{{head, q - 1}, {q + 1, tail}}
 					r += 2
 				}
@@ -160,7 +174,6 @@ func qSortC(array []int, workers int) {
 	}
 
 	for rest != 0 {
+		time.Sleep(time.Duration(rand.Intn(10)) * time.Nanosecond)
 	}
-
-	fmt.Println("end")
 }

@@ -39,11 +39,11 @@ func eq(a []int, b []int) bool {
 func TestCompute(t *testing.T) {
 	rand.Seed(1)
 
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 1000; i++ {
 		rows := [][]int{
-			generateArray(10),
+			generateArray(100),
 			{9, 15, 18, 18, 0, 3},
-			generateArray(rand.Intn(10000)),
+			generateArray(rand.Intn(10)),
 		}
 
 		for i, row := range rows {
@@ -51,7 +51,7 @@ func TestCompute(t *testing.T) {
 			sort.Ints(ex)
 
 			ac1 := compute(clone(row))
-			ac2 := computeC(clone(row), 1)
+			ac2 := computeC(clone(row), 2)
 
 			if !eq(ex, ac1) || !eq(ex, ac2) {
 				fmt.Printf("%d: %+v %+v %+v\n", i, ex, ac1, ac2)
