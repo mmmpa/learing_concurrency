@@ -1,9 +1,7 @@
 package p131
 
 import (
-	"sync"
-	"time"
-	"math/rand"
+	"context"
 )
 
 func compute(array []int) []int {
@@ -101,79 +99,38 @@ func computeC(array []int, workers int) []int {
 }
 
 func qSortC(array []int, workers int) {
-	mu:= new(sync.RWMutex)
-	mu2 := new(sync.RWMutex)
-	queue := []Data{{0, len(array) - 1}}
-	rest := 1
-
-	enqueue := make(chan []Data)
-	dequeue := make(chan Data)
-
-	go func() {
-
-		for {
-			time.Sleep(time.Duration(rand.Intn(10)) * time.Nanosecond)
-		EN:
-			for {
-				select {
-				case data := <-enqueue:
-					queue = append(queue, data...)
-				default:
-					break EN
-					time.Sleep(time.Duration(rand.Intn(10)) * time.Nanosecond)
-				}
-			}
-
-		DE:
-			for {
-				l := len(queue)
-				if l == 0 {
-					time.Sleep(time.Duration(rand.Intn(10)) * time.Nanosecond)
-					break DE
-				}
-
-				d := queue[0]
-
-				select {
-				case dequeue <- d:
-					if l == 1 {
-						queue = []Data{}
-					} else {
-						queue = queue[1:l]
-					}
-				default:
-					time.Sleep(time.Duration(rand.Intn(10)) * time.Nanosecond)
-					break DE
-				}
-			}
-		}
-	}()
+	length := len(array)
+	queue := make(chan Data, length)
+	done := make(chan interface{})
+	ctx, cancel := context.WithCancel(context.Background())
 
 	for w := 0; w < workers; w++ {
-		go func() {
+		go func(ctx context.Context, queue chan Data, id int) {
 			for {
-				data := <-dequeue
+				select {
+				case <-ctx.Done():
+					return
+				case data := <-queue:
+					head := data.Head
+					tail := data.Tail
 
-				head := data.Head
-				tail := data.Tail
-
-				r := -1
-				if head < tail {
-					mu.Lock()
-					q := part(array, head, tail)
-					mu.Unlock()
-					enqueue <- []Data{{head, q - 1}, {q + 1, tail}}
-					r += 2
+					if head < tail {
+						q := part(array, head, tail)
+						queue <- Data{head, q - 1}
+						queue <- Data{q + 1, tail}
+						done <- struct{}{}
+					} else if head == tail {
+						done <- struct{}{}
+					}
 				}
-
-				mu2.Lock()
-				rest += r
-				mu2.Unlock()
 			}
-		}()
+		}(ctx, queue, w)
 	}
 
-	for rest != 0 {
-		time.Sleep(time.Duration(rand.Intn(10)) * time.Nanosecond)
+	queue <- Data{0, length - 1}
+
+	for i := 0; i < length; i++ {
+		<-done
 	}
+	cancel()
 }

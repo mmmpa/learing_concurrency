@@ -39,22 +39,22 @@ func eq(a []int, b []int) bool {
 func TestCompute(t *testing.T) {
 	rand.Seed(1)
 
-	for i := 0; i < 1000; i++ {
+	for i := 0; i < 100; i++ {
 		rows := [][]int{
-			generateArray(100),
-			{9, 15, 18, 18, 0, 3},
-			generateArray(rand.Intn(10)),
+			generateArray(rand.Intn(1000)),
+			generateArray(rand.Intn(1000)),
+			generateArray(rand.Intn(1000)),
 		}
 
-		for i, row := range rows {
+		for _, row := range rows {
 			ex := clone(row)
 			sort.Ints(ex)
 
 			ac1 := compute(clone(row))
-			ac2 := computeC(clone(row), 2)
+			ac2 := computeC(clone(row), 10)
 
 			if !eq(ex, ac1) || !eq(ex, ac2) {
-				fmt.Printf("%d: %+v %+v %+v\n", i, ex, ac1, ac2)
+				// fmt.Printf("%d: %+v %+v %+v\n", i, ex, ac1, ac2)
 				t.Fail()
 			}
 		}
@@ -81,7 +81,7 @@ func BenchmarkCompute(b *testing.B) {
 func BenchmarkComputeC(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		computeC(clone(array), 12)
+		computeC(clone(array), 4)
 	}
 }
 
