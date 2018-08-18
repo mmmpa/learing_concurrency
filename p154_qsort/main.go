@@ -96,7 +96,7 @@ func computeC(array []int, workers int) []int {
 
 func qSortC(array []int, workers int) {
 	length := len(array)
-	queue := make(chan Data, length)
+	queue := make(chan *Data, length)
 	done := make(chan interface{}, length)
 
 	for w := 0; w < workers; w++ {
@@ -107,8 +107,8 @@ func qSortC(array []int, workers int) {
 
 				if head < tail {
 					q := part(array, head, tail)
-					queue <- Data{head, q - 1}
-					queue <- Data{q + 1, tail}
+					queue <- &Data{head, q - 1}
+					queue <- &Data{q + 1, tail}
 					done <- struct{}{}
 				} else if head == tail {
 					done <- struct{}{}
@@ -117,7 +117,7 @@ func qSortC(array []int, workers int) {
 		}()
 	}
 
-	queue <- Data{0, length - 1}
+	queue <- &Data{0, length - 1}
 
 	for i := 0; i < length; i++ {
 		<-done
