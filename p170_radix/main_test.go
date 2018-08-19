@@ -89,3 +89,10 @@ func BenchmarkComputeCC(b *testing.B) {
 		computeC(clone(array), 1)
 	}
 }
+
+func TestOne(t *testing.T) {
+	for i := 0; i < 8; i++ {
+		fmt.Printf("%d %b\n", i, i)
+	}
+	fmt.Printf("%b %b %b %b %b %b %b %b \n", 6, 5, 3, 7, 0, 1, 2, 4)
+}
