@@ -11,7 +11,7 @@ func generateArray(l int) []int {
 	a := make([]int, l)
 
 	for i, _ := range a {
-		a[i] = rand.Intn(10000000)
+		a[i] = rand.Intn(100000)
 	}
 
 	return a
@@ -39,11 +39,13 @@ func eq(a []int, b []int) bool {
 func TestCompute(t *testing.T) {
 	rand.Seed(1)
 
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 1; i++ {
 		rows := [][]int{
 			{445, 425, 511},
+			//{56, 33, 48, 34, 10, 74, 86, 37, 85, 15, 44, 38, 06, 45, 50, 45, 61, 94, 79, 96, 52, 35, 22, 61},
 			//{5, 3, 1, 6},
 			//{445, 425, 511},
+			//generateArray(10),
 			generateArray(1000),
 			generateArray(rand.Intn(10000) + 1),
 		}
@@ -54,7 +56,7 @@ func TestCompute(t *testing.T) {
 
 			ac1 := compute(clone(row))
 			//ac2 := compute(clone(row))
-			ac2 := computeC(clone(row), 10)
+			ac2 := computeC(clone(row), 4)
 
 			if !eq(ex, ac1) || !eq(ex, ac2) {
 				fmt.Printf("%d: %+v %+v %+v\n", i, ex, ac1, ac2)
