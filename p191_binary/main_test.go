@@ -52,18 +52,27 @@ func eq(a []int, b []int) bool {
 func TestCompute(t *testing.T) {
 	rand.Seed(1)
 
+	a := "abc"
+	b := "def"
+
+	a, b = b, a
+
+	fmt.Println(a, b)
+
 	for i := 0; i < 1; i++ {
 		rows := []struct {
 			array  []int
 			target int
 			result int
 		}{
-			{[]int{8, 9, 1, 4, 5, 0, 6, 3, 2, 7}, 1, 2},
-			{[]int{8, 9, 1, 4, 5, 0, 6, 3, 2, 7}, 10, -1},
+			{generateArray(16), 1, 1},
+			{generateArray(16), 9, 9},
+			{generateArray(16), 16, -1},
+			{generateArray(15), 14, 14},
 		}
 
 		for _, row := range rows {
-			ex := compute(row.array, row.target)
+			ex := compute(row.array, row.target, 4)
 			ac := computeC(row.array, row.target, 4)
 
 			if ex != row.result || ac != row.result {
@@ -86,7 +95,7 @@ func BenchmarkCompute(b *testing.B) {
 	}
 
 	for i := 0; i < b.N; i++ {
-		compute(arrays[i], rand.Intn(num))
+		compute(arrays[i], rand.Intn(num), 4)
 	}
 }
 
@@ -110,7 +119,7 @@ func BenchmarkComputeN(b *testing.B) {
 	}
 
 	for i := 0; i < b.N; i++ {
-		compute(arrays[i], num+1)
+		compute(arrays[i], num+1, 4)
 	}
 }
 
