@@ -77,25 +77,23 @@ func computeA(array []int, target int) int {
 
 	return -1
 }
-func computeC(array []int, target int, n int) int {
-	length := len(array)
+
+type Data struct {
+	Step float64
+	Head int
+	I    int
+}
+
+func farm(array []int, target int, n int, mid []int, lr []string, tail int, producer chan Data, result chan int) chan interface{} {
 	not := make(chan interface{})
 
-	mid := make([]int, n+1)
-	lr := make([]string, n+2)
+	for i := 1; i <= n; i++ {
+		go func(i int) {
+			for data := range producer {
+				head := data.Head
+				i := data.I
+				step := data.Step
 
-	head := 0
-	tail := length - 1
-	result := -1
-
-	lr[0] = "R"
-	lr[n+1] = "L"
-	for head <= tail && result == -1 {
-		mid[0] = head - 1
-		step := float64(tail-head+1) / float64(n+1)
-
-		for i := 1; i <= n; i++ {
-			go func(i int) {
 				offset := int(step*float64(i) + float64(i-1))
 				mid[i] = head + offset
 
@@ -108,14 +106,46 @@ func computeC(array []int, target int, n int) int {
 						lr[i] = "R"
 					default:
 						lr[i] = "E"
-						result = mid[i]
+						result <- mid[i]
 					}
 				} else {
 					mid[i] = tail + 1
 					lr[i] = "L"
 				}
 				not <- struct{}{}
-			}(i)
+			}
+		}(i)
+	}
+
+	return not
+}
+
+func computeC(array []int, target int, n int) int {
+	length := len(array)
+
+	mid := make([]int, n+1)
+	lr := make([]string, n+2)
+
+	head := 0
+	tail := length - 1
+
+	lr[0] = "R"
+	lr[n+1] = "L"
+
+	producer := make(chan Data)
+	result := make(chan int)
+	not := farm(array, target, n, mid, lr, tail, producer, result)
+
+	for head <= tail {
+		mid[0] = head - 1
+		step := float64(tail-head+1) / float64(n+1)
+
+		for i := 1; i <= n; i++ {
+			producer <- Data{
+				Head: head,
+				Step: step,
+				I:    i,
+			}
 		}
 
 		w := 0
@@ -127,10 +157,9 @@ func computeC(array []int, target int, n int) int {
 				if w == n {
 					break WAIT
 				}
+			case re := <-result:
+				return re
 			default:
-				if result != -1 {
-					return result
-				}
 			}
 		}
 
@@ -147,5 +176,5 @@ func computeC(array []int, target int, n int) int {
 		}
 	}
 
-	return result
+	return -1
 }

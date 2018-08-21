@@ -78,30 +78,21 @@ func TestCompute(t *testing.T) {
 }
 
 var num = 10000000
-var arrays [][]int
+var array = gen(num)
 
 func BenchmarkCompute(b *testing.B) {
 	b.ResetTimer()
 
-	arrays = make([][]int, b.N)
 	for i := 0; i < b.N; i++ {
-		arrays[i] = gen(num)
-	}
-
-	for i := 0; i < b.N; i++ {
-		compute(arrays[i], rand.Intn(num), 4)
+		compute(array, rand.Intn(num), 4)
 	}
 }
 
 func BenchmarkComputeC(b *testing.B) {
 	b.ResetTimer()
 
-	arrays = make([][]int, b.N)
 	for i := 0; i < b.N; i++ {
-		arrays[i] = gen(num)
-	}
-	for i := 0; i < b.N; i++ {
-		computeC(arrays[i], rand.Intn(num), 8)
+		computeC(array, rand.Intn(num), 4)
 	}
 }
 
