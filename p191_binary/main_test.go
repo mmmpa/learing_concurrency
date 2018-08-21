@@ -52,13 +52,6 @@ func eq(a []int, b []int) bool {
 func TestCompute(t *testing.T) {
 	rand.Seed(1)
 
-	a := "abc"
-	b := "def"
-
-	a, b = b, a
-
-	fmt.Println(a, b)
-
 	for i := 0; i < 1; i++ {
 		rows := []struct {
 			array  []int
@@ -69,6 +62,7 @@ func TestCompute(t *testing.T) {
 			{generateArray(16), 9, 9},
 			{generateArray(16), 16, -1},
 			{generateArray(15), 14, 14},
+			{generateArray(1000000), 100000, 100000},
 		}
 
 		for _, row := range rows {
@@ -83,7 +77,7 @@ func TestCompute(t *testing.T) {
 	}
 }
 
-var num = 1000000
+var num = 10000000
 var arrays [][]int
 
 func BenchmarkCompute(b *testing.B) {
@@ -107,30 +101,7 @@ func BenchmarkComputeC(b *testing.B) {
 		arrays[i] = gen(num)
 	}
 	for i := 0; i < b.N; i++ {
-		computeC(arrays[i], rand.Intn(num), 4)
-	}
-}
-func BenchmarkComputeN(b *testing.B) {
-	b.ResetTimer()
-
-	arrays = make([][]int, b.N)
-	for i := 0; i < b.N; i++ {
-		arrays[i] = gen(num)
-	}
-
-	for i := 0; i < b.N; i++ {
-		compute(arrays[i], num+1, 4)
+		computeC(arrays[i], rand.Intn(num), 8)
 	}
 }
 
-func BenchmarkComputeNC(b *testing.B) {
-	b.ResetTimer()
-
-	arrays = make([][]int, b.N)
-	for i := 0; i < b.N; i++ {
-		arrays[i] = gen(num)
-	}
-	for i := 0; i < b.N; i++ {
-		computeC(arrays[i], num+1, 4)
-	}
-}

@@ -1,9 +1,5 @@
 package p131
 
-import (
-	"context"
-)
-
 const intSize = 32 << (^uint(0) >> 63)
 
 func compute(array []int, target int, n int) int {
@@ -81,74 +77,75 @@ func computeA(array []int, target int) int {
 
 	return -1
 }
-func computeC(array []int, target int, workers int) int {
+func computeC(array []int, target int, n int) int {
 	length := len(array)
+	not := make(chan interface{})
+
+	mid := make([]int, n+1)
+	lr := make([]string, n+2)
+
+	head := 0
+	tail := length - 1
 	result := -1
-	not := make(chan interface{})
 
-	for w := 0; w < workers; w++ {
-		go func(offset int) {
-			for i := offset; i < length; i += workers {
-				if array[i] == target {
-					result = i
-					return
-				} else if result != -1 {
-					return
+	lr[0] = "R"
+	lr[n+1] = "L"
+	for head <= tail && result == -1 {
+		mid[0] = head - 1
+		step := float64(tail-head+1) / float64(n+1)
+
+		for i := 1; i <= n; i++ {
+			go func(i int) {
+				offset := int(step*float64(i) + float64(i-1))
+				mid[i] = head + offset
+
+				if mid[i] <= tail {
+					v := array[mid[i]]
+					switch {
+					case target < v:
+						lr[i] = "L"
+					case v < target:
+						lr[i] = "R"
+					default:
+						lr[i] = "E"
+						result = mid[i]
+					}
+				} else {
+					mid[i] = tail + 1
+					lr[i] = "L"
 				}
-			}
-			not <- struct{}{}
-		}(w)
-	}
+				not <- struct{}{}
+			}(i)
+		}
 
-	w := 0
-	for {
-		select {
-		case <-not:
-			w++
-			if w == workers {
-				return -1
-			}
-		default:
-			if result != -1 {
-				return result
+		w := 0
+	WAIT:
+		for {
+			select {
+			case <-not:
+				w++
+				if w == n {
+					break WAIT
+				}
+			default:
+				if result != -1 {
+					return result
+				}
 			}
 		}
-	}
-}
 
-func computeCC(array []int, target int, workers int) int {
-	length := len(array)
-	finish := make(chan int)
-	not := make(chan interface{})
-
-	ctx, cancel := context.WithCancel(context.Background())
-
-	for w := 0; w < workers; w++ {
-		go func(offset int) {
-			for i := offset; i < length; i += workers {
-				select {
-				case <-ctx.Done():
-					return
-				default:
-				}
-
-				if array[i] == target {
-					finish <- i
-					break
-				}
+		for i := 1; i <= n; i++ {
+			if lr[i-1] != lr[i] {
+				head = mid[i-1] + 1
+				tail = mid[i] - 1
 			}
-			not <- struct{}{}
-		}(w)
-	}
+		}
 
-	for w := 0; w < workers; w++ {
-		select {
-		case i := <-finish:
-			cancel()
-			return i
-		case <-not:
+		// 全て R の時
+		if lr[n] != lr[n+1] {
+			head = mid[n] + 1
 		}
 	}
 
-	return -1
+	return result
 }
