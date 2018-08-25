@@ -4,6 +4,8 @@ import (
 	"testing"
 	"math/rand"
 	"fmt"
+	"runtime/debug"
+	"runtime"
 )
 
 func eq(a []int, b []int) bool {
@@ -95,7 +97,7 @@ func itemPrinter(items []*Item) {
 			node := l.Path.Head
 
 			fmt.Print("head ")
-			for node != nil{
+			for node != nil {
 				fmt.Printf("%d ", node.N)
 				node = node.Next
 			}
@@ -106,6 +108,7 @@ func itemPrinter(items []*Item) {
 }
 
 func TestCompute(t *testing.T) {
+	debug.SetGCPercent(-1)
 	rand.Seed(1)
 
 	for i := 0; i < 1; i++ {
@@ -123,23 +126,47 @@ func TestCompute(t *testing.T) {
 			//generate(1000),
 		}
 
+		fmt.Println("prepared")
+		runtime.GC()
+
 		for _, row := range rows {
 			ac := compute(row)
 			ac2 := computeA(row)
-			ac3 := computeC(row, 10)
+			ac3 := computeC(row, 8)
 			println("start ■")
-			itemPrinter(ac)
+			//itemPrinter(ac)
 			println("")
-			itemPrinter(ac3)
+			//itemPrinter(ac3)
 			println("end ■")
 			// fmt.Println(ac2)
 			//printer(row)
 			// ac := computeC(row.array, row.target, 4)
 
+			runtime.GC()
 			if !uniqI(ac) || !uniq(ac2) || !uniqI(ac3) {
 				fmt.Printf("%d: %+v \n", i, ac)
 				t.Fail()
 			}
 		}
+	}
+}
+
+var array = generate(3000)
+
+func BenchmarkCompute(b *testing.B) {
+	debug.SetGCPercent(-1)
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		compute(array)
+	}
+}
+
+func BenchmarkComputeC(b *testing.B) {
+	debug.SetGCPercent(-1)
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		computeC(array, 8)
 	}
 }

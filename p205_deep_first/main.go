@@ -2,7 +2,8 @@ package p131
 
 import (
 	"sync"
-	"runtime/debug"
+	"time"
+	"math/rand"
 )
 
 type Q struct {
@@ -10,6 +11,8 @@ type Q struct {
 	Tail   *Item
 	Length int
 }
+
+var wait = 10
 
 func (o *Q) Push(item *Item) {
 	o.Length++
@@ -86,6 +89,7 @@ func compute(adj [][]int) []*Item {
 
 		visited[node.N] = true
 		node.Path.Push(node)
+		time.Sleep(time.Duration(wait) * time.Microsecond)
 
 		for i := nodes - 1; i >= 0; i-- {
 			if adj[node.N][i] == 1 {
@@ -103,16 +107,24 @@ type Pusher struct {
 }
 
 func computeC(adj [][]int, workers int) []*Item {
-	debug.SetGCPercent(-1)
-
 	nodes := len(adj)
 	visited := make([]bool, nodes)
 	path := make([]*Item, nodes)
 	queue := Q{}
-	step := 0
+	mun := workers*2
+	finished := false
 
-	mu := new(sync.Mutex)
-	mu2 := new(sync.Mutex)
+	poper := make(chan *Item, workers)
+	pusher := make(chan *Item, nodes*nodes)
+	stepper := make(chan interface{}, nodes)
+	closer := make(chan interface{}, nodes)
+
+	lockBox := make([]*sync.Mutex, mun)
+	for w := 0; w < mun; w++ {
+		lockBox[w] = new(sync.Mutex)
+	}
+
+	queueLock := new(sync.Mutex)
 
 	// fmt.Println("start")
 	for i := nodes - 1; i >= 0; i-- {
@@ -121,44 +133,87 @@ func computeC(adj [][]int, workers int) []*Item {
 		path[i] = item
 	}
 
+	go func() {
+		for p := range pusher {
+			queueLock.Lock()
+			queue.Push(p)
+			queueLock.Unlock()
+		}
+	}()
+
+	go func() {
+		defer close(poper)
+		for !finished {
+			queueLock.Lock()
+			p := queue.Pop()
+			queueLock.Unlock()
+			if p != nil {
+				poper <- p
+			} else {
+				time.Sleep(time.Duration(rand.Intn(10)) * time.Nanosecond)
+			}
+		}
+	}()
+
+	go func() {
+		for w := 0; w < workers; w++ {
+			<-closer
+		}
+		close(pusher)
+	}()
+
 	for w := 0; w < workers; w++ {
 		go func() {
-			for {
-				mu2.Lock()
-				if queue.Length < 1 {
-					continue
-				}
-				node := queue.Pop()
-				mu2.Unlock()
-
+		WORK:
+			for node := range poper {
 				working := false
-				mu.Lock()
+
+				m := muIndex(mun, node.N)
+				lockBox[m].Lock()
 				if !visited[node.N] {
 					visited[node.N] = true
-					node.Path.Push(node)
-					step++
-
 					working = true
 				}
-				mu.Unlock()
+				lockBox[m].Unlock()
 
 				if working {
+					node.Path.Push(node)
+					stepper <- struct{}{}
+					time.Sleep(time.Duration(wait) * time.Microsecond)
+
 					for i := nodes - 1; i >= 0; i-- {
 						if adj[node.N][i] == 1 {
-							mu2.Lock()
-							queue.Push(&Item{N: i, Path: node.Path})
-							mu2.Unlock()
+							if finished {
+								break WORK
+							}
+							pusher <- &Item{N: i, Path: node.Path}
 						}
 					}
 				}
+				if finished {
+					break WORK
+				}
 			}
+			closer <- struct{}{}
 		}()
 	}
 
-	for step < nodes {
+	for i := 0; i < nodes; i++ {
+		<-stepper
 	}
 
+	finished = true
+	close(stepper)
+
 	return path
+}
+
+func muIndex(w, n int) int {
+	if n < w {
+		return n
+	} else {
+		return n % w
+	}
 }
 
 func computeA(adj [][]int) []int {
