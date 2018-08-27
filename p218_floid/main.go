@@ -2,6 +2,7 @@ package p131
 
 import (
 	"math"
+	"fmt"
 )
 
 func copyDistances(distances [][]float64) [][]float64 {
@@ -37,12 +38,13 @@ func computeC(distances [][]float64, workers int) [][]float64 {
 	results := copyDistances(distances)
 
 	ch := make(chan interface{})
-
+	fmt.Println("start")
 	for k := 0; k < nodes; k++ {
 		for w := 0; w < workers; w++ {
 			go func(w int) {
 				for i := w; i < nodes; i += workers {
 					for j := 0; j < nodes; j++ {
+						fmt.Println(k, "   ", i, j, " ", i, k, " ", k, j, " ", results[i][j], results[i][k]+results[k][j])
 						results[i][j] = math.Min(results[i][j], results[i][k]+results[k][j])
 					}
 				}

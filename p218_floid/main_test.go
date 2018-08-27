@@ -45,6 +45,14 @@ func TestCompute(t *testing.T) {
 				{max, 2, 4, 1, 0, 2},
 				{max, max, max, 3, 2, 0},
 			},
+			{
+				{0,   max, max, max, max,   1},
+				{max,   0, max, max,   1, max},
+				{max, max,   0,   1, max,   1},
+				{max, max,   1,   0,   1, max},
+				{max,   1, max,   1,   0, max},
+				{1,   max,   1, max, max,   0},
+			},
 			//generate(1000),
 		}
 

@@ -44,8 +44,8 @@ func TestCompute(t *testing.T) {
 	for i := 0; i < 1; i++ {
 		rows := [][][]float64{
 			{
-				{max,   7,   2,   5, max},
-				{  7, max, max,   3,   8},
+				{max,   3,   2,   5, max},
+				{  3, max, max,   3,   8},
 				{  2, max, max,   4,   3},
 				{  5,   3,   4, max,   2},
 				{max,   8,   3,   2, max},
